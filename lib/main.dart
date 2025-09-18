@@ -53,6 +53,7 @@ class _ChatScreenState extends State<ChatScreen> {
   // String? _recordedAudioPath;
   bool _showWaveformModal = false;
   String? _modalAudioPath;
+  final Set<int> _playedBotVoiceIndices = {};
 
   @override
   void initState() {
@@ -264,7 +265,29 @@ class _ChatScreenState extends State<ChatScreen> {
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.play_arrow, color: Colors.deepPurpleAccent),
+                                      if (msg.isUser || !_playedBotVoiceIndices.contains(index))
+                                        GestureDetector(
+                                          onTap: msg.isUser
+                                              ? () {
+                                                  // User voice message playback logic (unchanged)
+                                                }
+                                              : () async {
+                                                  // Bot voice message: play only once
+                                                  // TODO: Replace with actual audio playback logic
+                                                  setState(() {
+                                                    _playedBotVoiceIndices.add(index);
+                                                  });
+                                                },
+                                          child: Icon(
+                                            Icons.play_arrow,
+                                            color: Colors.deepPurpleAccent,
+                                          ),
+                                        )
+                                      else
+                                        Icon(
+                                          Icons.play_arrow,
+                                          color: Colors.grey,
+                                        ),
                                       const SizedBox(width: 8),
                                       Text(
                                         msg.isUser ? "You (voice)" : "Bot (voice)",
