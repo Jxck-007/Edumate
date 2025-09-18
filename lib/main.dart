@@ -6,6 +6,7 @@ import 'package:translator/translator.dart';
 import 'package:google_mlkit_language_id/google_mlkit_language_id.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:image_picker/image_picker.dart';
+import 'package:edumate/voice_chat_overlay.dart';
 
 void main() {
   runApp(const MyApp());
@@ -140,7 +141,7 @@ class _ChatScreenState extends State<ChatScreen> {
   // Placeholder for Rasa backend API call
   Future<String> _queryRasa(String message) async {
     // Replace with your Rasa endpoint
-    final rasaUrl = Uri.parse('http://localhost:5005/webhooks/rest/webhook');
+    final rasaUrl = Uri.parse('http://172.16.4.159:5005/webhooks/rest/webhook');
     try {
       final response = await http.post(
         rasaUrl,
@@ -214,100 +215,110 @@ class _ChatScreenState extends State<ChatScreen> {
                 )
               : null,
         ),
-        child: Column(
+        child: Stack(
           children: [
-            const Divider(height: 1),
-            // Chat area
-            Expanded(
-              child: ListView.builder(
-                reverse: false,
-                padding: const EdgeInsets.all(8),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final msg = _messages[index];
-                  return Align(
-                    alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      constraints: const BoxConstraints(maxWidth: 320),
-                      decoration: BoxDecoration(
-                        color: msg.isUser
-                            ? Colors.lightBlue[200]?.withOpacity(0.85)
-                            : Colors.grey[100]?.withOpacity(0.85),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(msg.isUser ? 16 : 4),
-                          topRight: Radius.circular(msg.isUser ? 4 : 16),
-                          bottomLeft: const Radius.circular(16),
-                          bottomRight: const Radius.circular(16),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
+            Column(
+              children: [
+                const Divider(height: 1),
+                // Chat area
+                Expanded(
+                  child: ListView.builder(
+                    reverse: false,
+                    padding: const EdgeInsets.all(8),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = _messages[index];
+                      return Align(
+                        alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          constraints: const BoxConstraints(maxWidth: 320),
+                          decoration: BoxDecoration(
+                            color: msg.isUser
+                                ? Colors.lightBlue[200]?.withOpacity(0.85)
+                                : Colors.grey[100]?.withOpacity(0.85),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(msg.isUser ? 16 : 4),
+                              topRight: Radius.circular(msg.isUser ? 4 : 16),
+                              bottomLeft: const Radius.circular(16),
+                              bottomRight: const Radius.circular(16),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: Text(
-                        msg.text,
-                        style: TextStyle(
-                          color: msg.isUser ? Colors.indigo.shade900 : Colors.black87,
-                          fontSize: 16,
+                          child: Text(
+                            msg.text,
+                            style: TextStyle(
+                              color: msg.isUser ? Colors.indigo.shade900 : Colors.black87,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                // Input area
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  color: Colors.white.withOpacity(0.8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          decoration: const InputDecoration(
+                            hintText: 'Type your message...',
+                            border: OutlineInputBorder(),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                          onChanged: (val) {
+                            setState(() => _hasText = val.trim().isNotEmpty);
+                          },
+                          onSubmitted: _sendMessage,
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
+                      const SizedBox(width: 8),
+                      // Send button only if text is present
+                      if (_hasText)
+                        IconButton(
+                          icon: const Icon(Icons.send, color: Colors.deepPurpleAccent),
+                          onPressed: () => _sendMessage(_controller.text),
+                        ),
+                      // Press and hold mic button for voice
+                      GestureDetector(
+                        onLongPress: _startListening,
+                        onLongPressUp: _stopListening,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _isListening ? Colors.indigo.shade100 : Colors.grey.shade200,
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(
+                            _isListening ? Icons.mic : Icons.mic_none,
+                            color: Colors.deepPurpleAccent,
+                            size: 28,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            // Input area
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              color: Colors.white.withOpacity(0.8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      decoration: const InputDecoration(
-                        hintText: 'Type your message...',
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.white,
-                      ),
-                      onChanged: (val) {
-                        setState(() => _hasText = val.trim().isNotEmpty);
-                      },
-                      onSubmitted: _sendMessage,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Send button only if text is present
-                  if (_hasText)
-                    IconButton(
-                      icon: const Icon(Icons.send, color: Colors.deepPurpleAccent),
-                      onPressed: () => _sendMessage(_controller.text),
-                    ),
-                  // Press and hold mic button for voice
-                  GestureDetector(
-                    onLongPress: _startListening,
-                    onLongPressUp: _stopListening,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _isListening ? Colors.indigo.shade100 : Colors.grey.shade200,
-                      ),
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        _isListening ? Icons.mic : Icons.mic_none,
-                        color: Colors.deepPurpleAccent,
-                        size: 28,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: VoiceChatOverlay(isListening: _isListening),
             ),
           ],
         ),
