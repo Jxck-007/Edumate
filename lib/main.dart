@@ -65,6 +65,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _addBotMessage(String text, String lang, {String? audioPath}) async {
     setState(() {
+      // If audioPath is present, always show text alongside audio
       _messages.add(ChatMessage(text: text, isUser: false, languageCode: lang, audioPath: audioPath));
     });
     if (audioPath == null) {
@@ -94,9 +95,10 @@ class _ChatScreenState extends State<ChatScreen> {
       var translatedRestricted = await translator.translate(restrictedMsg, to: detectedLang);
       await _addBotMessage(translatedRestricted.text, detectedLang);
     } else if (rasaResponse == "Sorry, I couldn't connect to the server.") {
-      // Synthesize bot voice message and add as audio
-      String botAudioPath = await _synthesizeBotAudio("Sorry, I couldn’t connect to the server.", detectedLang);
-  await _addBotMessage("", detectedLang, audioPath: botAudioPath);
+      // Synthesize bot voice message and add as audio, always show text
+      String botText = "Sorry, I couldn’t connect to the server.";
+      String botAudioPath = await _synthesizeBotAudio(botText, detectedLang);
+      await _addBotMessage(botText, detectedLang, audioPath: botAudioPath);
     } else {
       var translatedOutput = await translator.translate(rasaResponse, to: detectedLang);
       await _addBotMessage(translatedOutput.text, detectedLang);
@@ -172,6 +174,7 @@ class _ChatScreenState extends State<ChatScreen> {
       return "Sorry, I couldn't connect to the server.";
     }
   }
+
 
   // Simulate topic restriction (replace with actual logic)
   bool _isCollegeOrTechnical(String message) {
@@ -255,18 +258,34 @@ class _ChatScreenState extends State<ChatScreen> {
                           ],
                         ),
                         child: msg.audioPath != null
-                            ? Row(
-                                mainAxisSize: MainAxisSize.min,
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.play_arrow, color: Colors.deepPurpleAccent),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    msg.isUser ? "You (voice)" : "Bot (voice)",
-                                    style: TextStyle(
-                                      color: msg.isUser ? Colors.indigo.shade900 : Colors.black87,
-                                      fontSize: 16,
-                                    ),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.play_arrow, color: Colors.deepPurpleAccent),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        msg.isUser ? "You (voice)" : "Bot (voice)",
+                                        style: TextStyle(
+                                          color: msg.isUser ? Colors.indigo.shade900 : Colors.black87,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                  if (msg.text != null && msg.text!.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 6.0),
+                                      child: Text(
+                                        msg.text!,
+                                        style: TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               )
                             : Text(
