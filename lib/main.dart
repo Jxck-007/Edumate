@@ -192,28 +192,34 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            // Logo placeholder
+            // App logo image (logo.jpeg)
             Container(
-              width: 32,
-              height: 32,
+              width: 40,
+              height: 40,
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white,
                 border: Border.all(color: Colors.indigo.shade200),
+                image: DecorationImage(
+                  image: AssetImage('assets/images/logo.jpeg'),
+                  fit: BoxFit.cover,
+                ),
               ),
-              child: const Icon(Icons.school, color: Colors.indigo), // Replace with logo later
-            ),
-            const Text(
-              'Edumate',
-              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Container(
-        color: Colors.indigo.shade50,
+        decoration: BoxDecoration(
+          color: Colors.indigo.shade50,
+          image: DecorationImage(
+            image: AssetImage('assets/images/background.jpg'),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.18), BlendMode.dstATop),
+          ),
+        ),
         child: Column(
           children: [
             const Divider(height: 1),
@@ -353,36 +359,52 @@ class _ChatScreenState extends State<ChatScreen> {
                       onPressed: () => _sendMessage(text: _controller.text),
                     ),
                   // Press and hold mic button for voice
-                  GestureDetector(
-                    onLongPress: _startListening,
-                    onLongPressUp: _stopListening,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _isListening ? Colors.indigo.shade100 : Colors.grey.shade200,
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      GestureDetector(
+                        onLongPress: () {
+                          setState(() {
+                            _isListening = true;
+                          });
+                          _startListening();
+                        },
+                        onLongPressUp: () {
+                          setState(() {
+                            _isListening = false;
+                          });
+                          _stopListening();
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _isListening ? Colors.indigo.shade100 : Colors.grey.shade200,
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(
+                            _isListening ? Icons.mic : Icons.mic_none,
+                            color: Colors.deepPurpleAccent,
+                            size: 28,
+                          ),
+                        ),
                       ),
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        _isListening ? Icons.mic : Icons.mic_none,
-                        color: Colors.deepPurpleAccent,
-                        size: 28,
-                      ),
-                    ),
+                      if (_isListening)
+                        Positioned(
+                          top: 56,
+                          child: SizedBox(
+                            width: 220,
+                            height: 80,
+                            child: WaveformModal(
+                              audioPath: '',
+                              onClose: () {},
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
             ),
-            // Waveform modal for voice messages
-            if (_showWaveformModal && _modalAudioPath != null)
-              WaveformModal(
-                audioPath: _modalAudioPath!,
-                onClose: () {
-                  setState(() {
-                    _showWaveformModal = false;
-                    _modalAudioPath = null;
-                  });
-                },
-              ),
           ],
         ),
       ),
