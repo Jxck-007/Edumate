@@ -209,7 +209,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+  backgroundColor: const Color(0xFF19202a),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -233,98 +233,121 @@ class _ChatScreenState extends State<ChatScreen> {
                   final msg = _messages[index];
                   return Align(
                     alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
-                    child: GestureDetector(
-                      onTap: msg.audioPath != null
-                          ? () {
-                              setState(() {
-                                _showWaveformModal = true;
-                                _modalAudioPath = msg.audioPath;
-                              });
-                            }
-                          : null,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        constraints: const BoxConstraints(maxWidth: 320),
-                        decoration: BoxDecoration(
-                          color: msg.isUser
-                              ? Colors.lightBlue[200]?.withOpacity(0.85)
-                              : Colors.grey[100]?.withOpacity(0.85),
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(msg.isUser ? 16 : 4),
-                            topRight: Radius.circular(msg.isUser ? 4 : 16),
-                            bottomLeft: const Radius.circular(16),
-                            bottomRight: const Radius.circular(16),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
+                    child: Row(
+                      mainAxisAlignment: msg.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (!msg.isUser)
+                          Container(
+                            width: 32,
+                            height: 32,
+                            margin: const EdgeInsets.only(right: 8, top: 2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                              border: Border.all(color: Colors.indigo.shade200),
+                              image: DecorationImage(
+                                image: AssetImage('assets/images/logo.jpeg'),
+                                fit: BoxFit.cover,
+                              ),
                             ),
-                          ],
-                        ),
-                        child: msg.audioPath != null
-                            ? Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (msg.isUser || !_playedBotVoiceIndices.contains(index))
-                                        GestureDetector(
-                                          onTap: msg.isUser
-                                              ? () {
-                                                  // User voice message playback logic (unchanged)
-                                                }
-                                              : () async {
-                                                  // Bot voice message: play only once
-                                                  // TODO: Replace with actual audio playback logic
-                                                  setState(() {
-                                                    _playedBotVoiceIndices.add(index);
-                                                  });
-                                                },
-                                          child: Icon(
-                                            Icons.play_arrow,
-                                            color: Colors.deepPurpleAccent,
-                                          ),
-                                        )
-                                      else
-                                        Icon(
-                                          Icons.play_arrow,
-                                          color: Colors.grey,
-                                        ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        msg.isUser ? "You (voice)" : "Bot (voice)",
-                                        style: TextStyle(
-                                          color: msg.isUser ? Colors.indigo.shade900 : Colors.black87,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ],
+                          ),
+                        Flexible(
+                          child: GestureDetector(
+                            onTap: msg.audioPath != null
+                                ? () {
+                                    setState(() {
+                                      _showWaveformModal = true;
+                                      _modalAudioPath = msg.audioPath;
+                                    });
+                                  }
+                                : null,
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              constraints: const BoxConstraints(maxWidth: 320),
+                              decoration: BoxDecoration(
+                                color: msg.isUser
+                                    ? Colors.lightBlue[200]?.withOpacity(0.85)
+                                    : Colors.grey[100]?.withOpacity(0.85),
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(msg.isUser ? 16 : 4),
+                                  topRight: Radius.circular(msg.isUser ? 4 : 16),
+                                  bottomLeft: const Radius.circular(16),
+                                  bottomRight: const Radius.circular(16),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
                                   ),
-                                  if (msg.text != null && msg.text!.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 6.0),
-                                      child: Text(
-                                        msg.text!,
-                                        style: TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: 15,
+                                ],
+                              ),
+                              child: msg.audioPath != null
+                                  ? Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            if (msg.isUser || !_playedBotVoiceIndices.contains(index))
+                                              GestureDetector(
+                                                onTap: msg.isUser
+                                                    ? () {
+                                                        // User voice message playback logic (unchanged)
+                                                      }
+                                                    : () async {
+                                                        // Bot voice message: play only once
+                                                        // TODO: Replace with actual audio playback logic
+                                                        setState(() {
+                                                          _playedBotVoiceIndices.add(index);
+                                                        });
+                                                      },
+                                                child: Icon(
+                                                  Icons.play_arrow,
+                                                  color: Colors.deepPurpleAccent,
+                                                ),
+                                              )
+                                            else
+                                              Icon(
+                                                Icons.play_arrow,
+                                                color: Colors.grey,
+                                              ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              msg.isUser ? "You (voice)" : "Bot (voice)",
+                                              style: TextStyle(
+                                                color: msg.isUser ? Colors.indigo.shade900 : Colors.black87,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
                                         ),
+                                        if (msg.text != null && msg.text!.isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 6.0),
+                                            child: Text(
+                                              msg.text!,
+                                              style: TextStyle(
+                                                color: Colors.black87,
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    )
+                                  : Text(
+                                      msg.text ?? "",
+                                      style: TextStyle(
+                                        color: msg.isUser ? Colors.indigo.shade900 : Colors.black87,
+                                        fontSize: 16,
                                       ),
                                     ),
-                                ],
-                              )
-                            : Text(
-                                msg.text ?? "",
-                                style: TextStyle(
-                                  color: msg.isUser ? Colors.indigo.shade900 : Colors.black87,
-                                  fontSize: 16,
-                                ),
-                              ),
-                      ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 },
